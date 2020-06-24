@@ -9,6 +9,7 @@
 #include "Vehicle.h"
 
 /* Implementation of class "WaitingVehicles" */
+
 int WaitingVehicles::getSize()
 {
     std::lock_guard<std::mutex> lock(_mutex);
@@ -41,6 +42,7 @@ void WaitingVehicles::permitEntryToFirstInQueue()
 }
 
 /* Implementation of class "Intersection" */
+
 Intersection::Intersection()
 {
     _type = ObjectType::objectIntersection;
@@ -85,16 +87,18 @@ void Intersection::addVehicleToQueue(std::shared_ptr<Vehicle> vehicle)
     std::cout << "Intersection #" << _id << ": Vehicle #" << vehicle->getID() << " is granted entry." << std::endl;
     
     // FP.6b : use the methods TrafficLight::getCurrentPhase and TrafficLight::waitForGreen to block the execution until the traffic light turns green.
-	if(!trafficLightIsGreen())
+	
+	lck.unlock();
+  	if(!trafficLightIsGreen())
     {
         _trafficLight.waitForGreen();
     }
-
-    lck.unlock();
 }
 
 void Intersection::vehicleHasLeft(std::shared_ptr<Vehicle> vehicle)
 {
+    //std::cout << "Intersection #" << _id << ": Vehicle #" << vehicle->getID() << " has left." << std::endl;
+
     // unblock queue processing
     this->setIsBlocked(false);
 }
@@ -102,6 +106,7 @@ void Intersection::vehicleHasLeft(std::shared_ptr<Vehicle> vehicle)
 void Intersection::setIsBlocked(bool isBlocked)
 {
     _isBlocked = isBlocked;
+    //std::cout << "Intersection #" << _id << " isBlocked=" << isBlocked << std::endl;
 }
 
 // virtual function which is executed in a thread
@@ -115,6 +120,9 @@ void Intersection::simulate() // using threads + promises/futures + exceptions
 
 void Intersection::processVehicleQueue()
 {
+    // print id of the current thread
+    //std::cout << "Intersection #" << _id << "::processVehicleQueue: thread id = " << std::this_thread::get_id() << std::endl;
+
     // continuously process the vehicle queue
     while (true)
     {

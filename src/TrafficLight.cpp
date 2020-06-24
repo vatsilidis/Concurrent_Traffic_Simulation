@@ -62,35 +62,6 @@ void TrafficLight::simulate()
   threads.emplace_back(std::thread(&TrafficLight::cycleThroughPhases, this));
 }
 
-/*
-// virtual function which is executed in a thread
-void TrafficLight::cycleThroughPhases()
-{
-    // FP.2a : Implement the function with an infinite loop that measures the time between two loop cycles 
-    // and toggles the current phase of the traffic light between red and green and sends an update method 
-    // to the message queue using move semantics. The cycle duration should be a random value between 4 and 6 seconds. 
-    // Also, the while-loop should use std::this_thread::sleep_for to wait 1ms between two cycles. 
-  
-    // hold current time
-    std::chrono::time_point<std::chrono::system_clock> lastUpdate;
-    lastUpdate = std::chrono::system_clock::now();
-	double cycleDuration;
-  
-    while(true) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        cycleDuration = (std::rand() / double(RAND_MAX)) * (6 - 4) + 4;
-      	std::cout << "cycle Duration: " << cycleDuration << " - _currentPhase: " << _currentPhase << std::endl;
-        long time_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lastUpdate).count();
-        if(time_duration >= cycleDuration) {
-            _currentPhase = (_currentPhase == red ? green : red);
-			_queue.send(std::move(_currentPhase));
-          	// futures.emplace_back(std::async(std::launch::async, &MessageQueue<TrafficLightPhase>::send, &_queue, std::move(_currentPhase)));
-        }
-        // Reset stop watch 
-		lastUpdate = std::chrono::system_clock::now();
-    }
-}
-*/
 
 double changeTime()
 {
@@ -113,6 +84,7 @@ void TrafficLight::cycleThroughPhases()
     while (true)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
         // compute time difference to stop watch
         long timeSinceLastUpdate = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lastUpdate).count();
         if (timeSinceLastUpdate >= cycleDuration)
