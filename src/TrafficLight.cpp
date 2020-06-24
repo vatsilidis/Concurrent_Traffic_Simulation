@@ -61,6 +61,8 @@ void TrafficLight::simulate()
     // FP.2b : Finally, the private method „cycleThroughPhases“ should be started in a thread when the public method „simulate“ is called. To do this, use the thread queue in the base class. 
   threads.emplace_back(std::thread(&TrafficLight::cycleThroughPhases, this));
 }
+
+/*
 // virtual function which is executed in a thread
 void TrafficLight::cycleThroughPhases()
 {
@@ -73,9 +75,11 @@ void TrafficLight::cycleThroughPhases()
     std::chrono::time_point<std::chrono::system_clock> lastUpdate;
     lastUpdate = std::chrono::system_clock::now();
 	double cycleDuration;
+  
     while(true) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         cycleDuration = (std::rand() / double(RAND_MAX)) * (6 - 4) + 4;
+      	std::cout << "cycle Duration: " << cycleDuration << " - _currentPhase: " << _currentPhase << std::endl;
         long time_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lastUpdate).count();
         if(time_duration >= cycleDuration) {
             _currentPhase = (_currentPhase == red ? green : red);
@@ -84,5 +88,49 @@ void TrafficLight::cycleThroughPhases()
         }
         // Reset stop watch 
 		lastUpdate = std::chrono::system_clock::now();
+    }
+}
+*/
+
+double changeTime()
+{
+    typedef std::chrono::high_resolution_clock clock;
+    // generate a random time from 4 to 6 seconds
+    clock::time_point beginning = clock::now();
+	clock::duration d = clock::now() - beginning;
+    unsigned seed = d.count();
+	std::mt19937 generator(seed);
+    std::uniform_real_distribution<double> distribution(4, 6);
+    return distribution(generator) * 1000;
+}
+
+void TrafficLight::cycleThroughPhases()
+{
+    int cycleDuration = changeTime();
+    std::chrono::time_point<std::chrono::system_clock> lastUpdate;
+    lastUpdate = std::chrono::system_clock::now();
+
+    while (true)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        // compute time difference to stop watch
+        long timeSinceLastUpdate = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lastUpdate).count();
+        if (timeSinceLastUpdate >= cycleDuration)
+        {
+            // reset light duration
+          	cycleDuration = changeTime(); 
+            switch (_currentPhase)
+            {
+            case TrafficLightPhase::green:
+                _currentPhase = TrafficLightPhase::red;
+                break;
+            case TrafficLightPhase::red:
+                _currentPhase = TrafficLightPhase::green;
+                break;
+            }
+			//std::cout << "Current Traffic Light Phase: " << _currentPhase << std::endl;
+            _queue.send(std::move(_currentPhase));
+          	lastUpdate = std::chrono::system_clock::now();
+        }
     }
 }
